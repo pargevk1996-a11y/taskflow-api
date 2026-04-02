@@ -1,0 +1,21 @@
+from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict
+
+
+class ORMBaseSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TimestampSchema(ORMBaseSchema):
+    created_at: datetime
+    updated_at: datetime
+
+
+class MessageSchema(BaseModel):
+    message: str
+
+
+class PaginationParams(BaseModel):
+    page: int = 1
+    size: int = 20
