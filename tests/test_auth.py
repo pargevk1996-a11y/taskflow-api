@@ -29,6 +29,21 @@ def test_register_and_login(db):
     assert login_token.access_token
 
 
+def test_login_with_username(db):
+    service = AuthService(db)
+
+    service.register(
+        RegisterRequest(
+            email="username-login@example.com",
+            username="username_login",
+            password="strongpassword123",
+        )
+    )
+
+    login_token = service.login_with_identifier("username_login", "strongpassword123")
+    assert login_token.access_token
+
+
 def test_refresh(db):
     service = AuthService(db)
     token = service.register(

@@ -31,10 +31,13 @@ class AuthService:
         return self._issue_tokens_for_user(user)
 
     def login(self, payload: LoginRequest) -> Token:
-        user = self.user_repository.get_by_email(payload.email)
+        return self.login_with_identifier(payload.email, payload.password)
+
+    def login_with_identifier(self, identifier: str, password: str) -> Token:
+        user = self.user_repository.get_by_login(identifier)
         if not user:
             raise InvalidCredentialsError("Invalid email or password")
-        if not verify_password(payload.password, user.hashed_password):
+        if not verify_password(password, user.hashed_password):
             raise InvalidCredentialsError("Invalid email or password")
         if not user.is_active:
             raise InvalidCredentialsError("User is inactive")
