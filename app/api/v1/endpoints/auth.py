@@ -1,8 +1,12 @@
+import logging
+import traceback
+
 from fastapi import APIRouter
 from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, get_login_form
+from app.api.deps import get_db
 from app.core.exceptions import BadRequestError, InvalidCredentialsError, TokenInvalidError, UserAlreadyExistsError
 from app.schemas.auth import LoginRequest, LoginResponse, RegisterRequest, RegisterResponse
 from app.schemas.common import MessageSchema
@@ -10,6 +14,7 @@ from app.schemas.token import RefreshTokenRequest, Token
 from app.services.auth_service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
+logger = logging.getLogger(__name__)
 
 
 @router.post(
@@ -34,14 +39,19 @@ async def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> R
     summary="Log in with login and password",
     description="In Swagger OAuth2 password flow, put your account login into the username field.",
 )
-async def login(payload: LoginRequest = Depends(get_login_form), db: Session = Depends(get_db)) -> LoginResponse:
+async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)) -> LoginResponse:
     service = AuthService(db)
+    payload = LoginRequest(login=form_data.username, password=form_data.password)
     try:
         return service.login(payload)
     except BadRequestError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except InvalidCredentialsError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Unexpected error during login for login=%s", form_data.username)
+        traceback.print_exc()
+        raise exc
 
 
 @router.post("/refresh", response_model=Token)
