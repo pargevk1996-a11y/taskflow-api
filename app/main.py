@@ -24,7 +24,7 @@ const hideOauthClientFields = () => {
   const labels = Array.from(document.querySelectorAll("label"));
   for (const label of labels) {
     const text = (label.textContent || "").trim().toLowerCase();
-    if (text === "client_id:" || text === "client_secret:") {
+    if (text === "client_id:" || text === "client_secret:" || text === "client credentials location:") {
       const wrapper = label.parentElement;
       if (wrapper) {
         wrapper.style.display = "none";

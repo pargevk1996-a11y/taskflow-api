@@ -3,7 +3,7 @@ from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
-from app.core.exceptions import NotFoundError
+from app.core.exceptions import NotFoundError, UserAlreadyExistsError
 from app.models.user import User
 from app.schemas.user import UserRead, UserUpdate
 from app.services.user_service import UserService
@@ -36,3 +36,5 @@ def update_me(
         return service.update_user(current_user.id, payload)
     except NotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except UserAlreadyExistsError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc

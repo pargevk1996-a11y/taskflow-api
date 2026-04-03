@@ -1,4 +1,4 @@
-from app.schemas.auth import LoginRequest, RegisterRequest
+from app.schemas.auth import LoginRequest, LoginResponse, RegisterRequest, RegisterResponse
 from app.schemas.comment import CommentCreate, CommentRead, CommentUpdate
 from app.schemas.notification import NotificationCreate, NotificationRead, NotificationTypeSchema
 from app.schemas.project import ProjectCreate, ProjectRead, ProjectUpdate
@@ -12,6 +12,7 @@ __all__ = [
     "CommentRead",
     "CommentUpdate",
     "LoginRequest",
+    "LoginResponse",
     "NotificationCreate",
     "NotificationRead",
     "NotificationTypeSchema",
@@ -20,6 +21,7 @@ __all__ = [
     "ProjectUpdate",
     "RefreshTokenRequest",
     "RegisterRequest",
+    "RegisterResponse",
     "TaskCreate",
     "TaskPrioritySchema",
     "TaskRead",

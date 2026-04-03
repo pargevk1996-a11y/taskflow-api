@@ -63,6 +63,52 @@ Open docs: `http://localhost:8000/docs`
 .venv/bin/pytest -q
 ```
 
+## Auth flow
+
+Registration endpoint:
+
+```bash
+POST /api/v1/auth/register
+```
+
+Request body:
+
+```json
+{
+  "email": "user@example.com",
+  "login": "my_login",
+  "password": "strongpassword123",
+  "confirm_password": "strongpassword123"
+}
+```
+
+Successful response:
+
+```json
+{
+  "message": "Hey Dude! Log in!"
+}
+```
+
+Login endpoint:
+
+```bash
+POST /api/v1/auth/login
+```
+
+Swagger OAuth2 password flow uses the `username` field technically, but you must enter the account `login` there.
+
+Successful response:
+
+```json
+{
+  "access_token": "...",
+  "refresh_token": "...",
+  "token_type": "bearer",
+  "message": "Welcome Dude!"
+}
+```
+
 ## Celery
 
 Worker:
@@ -75,14 +121,7 @@ celery -A app.tasks.celery_app worker --loglevel=info
 
 The project follows strict folder layout with clear boundaries between transport layer, business logic, and persistence.
 
-## Current status
-
-- Base architecture is implemented
-- Auth + users + workspace/project/task/comment/notification flows are scaffolded
-- Service-level tests are green (`8 passed`)
-- Docker and compose files are prepared
-
 ## Notes
 
 - In some environments `passlib` may print a warning about `bcrypt` backend internals. This does not break runtime behavior.
-- Before production deploy: add stricter permissions checks and complete Alembic migration history in `alembic/versions`.
+- Before production deploy: make sure to run `alembic upgrade head` against the target database before starting the API.

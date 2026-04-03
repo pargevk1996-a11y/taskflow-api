@@ -7,7 +7,7 @@ class AuthError(AppError):
 
 
 class UserAlreadyExistsError(AuthError):
-    """Raised when user with same email or username already exists."""
+    """Raised when user with same email or login already exists."""
 
 
 class InvalidCredentialsError(AuthError):

@@ -12,8 +12,9 @@ def test_create_project(db):
     auth_service.register(
         RegisterRequest(
             email="project-owner@example.com",
-            username="projectowner",
+            login="projectowner",
             password="strongpassword123",
+            confirm_password="strongpassword123",
         )
     )
 

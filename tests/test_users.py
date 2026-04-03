@@ -9,8 +9,9 @@ def test_get_and_update_user(db):
     auth_service.register(
         RegisterRequest(
             email="user1@example.com",
-            username="user1",
+            login="user1",
             password="strongpassword123",
+            confirm_password="strongpassword123",
         )
     )
 
@@ -18,5 +19,5 @@ def test_get_and_update_user(db):
     user = user_service.get_user(1)
     assert user.email == "user1@example.com"
 
-    updated = user_service.update_user(1, UserUpdate(username="user1_updated"))
-    assert updated.username == "user1_updated"
+    updated = user_service.update_user(1, UserUpdate(login="user1_updated"))
+    assert updated.login == "user1_updated"

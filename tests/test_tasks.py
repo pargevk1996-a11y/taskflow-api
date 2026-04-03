@@ -14,8 +14,9 @@ def test_create_task(db):
     auth_service.register(
         RegisterRequest(
             email="task-owner@example.com",
-            username="taskowner",
+            login="taskowner",
             password="strongpassword123",
+            confirm_password="strongpassword123",
         )
     )
 

@@ -9,8 +9,9 @@ def test_create_workspace(db):
     auth_service.register(
         RegisterRequest(
             email="owner@example.com",
-            username="owner",
+            login="owner",
             password="strongpassword123",
+            confirm_password="strongpassword123",
         )
     )
 

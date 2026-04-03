@@ -1,5 +1,4 @@
 from datetime import UTC, datetime, timedelta
-from uuid import uuid4
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -10,57 +9,51 @@ from app.core.security import create_access_token, create_refresh_token, decode_
 from app.models.refresh_token import RefreshToken
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
-from app.schemas.auth import LoginRequest, RegisterRequest
+from app.schemas.auth import LoginRequest, LoginResponse, RegisterRequest, RegisterResponse
 from app.schemas.token import Token
 
 
 class AuthService:
-    FORBIDDEN_PASSWORD_SYMBOLS = (".", "!", "?")
-
     def __init__(self, db: Session) -> None:
         self.db = db
         self.user_repository = UserRepository(db)
 
-    def register(self, payload: RegisterRequest) -> Token:
-        username = self._validate_username(payload.username)
-        self._validate_password(payload.password)
+    def register(self, payload: RegisterRequest) -> RegisterResponse:
+        login = self._validate_login(payload.login)
+        self._validate_passwords(payload.password, payload.confirm_password)
 
-        if self.user_repository.get_by_username(username):
-            raise UserAlreadyExistsError("Username is already taken")
-
-        email = payload.email
-        if email:
-            existing_user = self.user_repository.get_by_email_or_username(email=email, username=username)
-            if existing_user:
-                raise UserAlreadyExistsError("User with this email or username already exists")
-            persisted_email = email
-        else:
-            persisted_email = f"{uuid4()}@local.taskflow"
+        if self.user_repository.get_by_email(payload.email):
+            raise UserAlreadyExistsError("Email is already taken")
+        if self.user_repository.get_by_login(login):
+            raise UserAlreadyExistsError("Login is already taken")
 
         user = self.user_repository.create(
-            email=persisted_email,
-            username=username,
+            email=payload.email,
+            login=login,
             hashed_password=get_password_hash(payload.password),
         )
+        _ = user
+        return RegisterResponse(message="Hey Dude! Log in!")
 
-        return self._issue_tokens_for_user(user)
-
-    def login(self, payload: LoginRequest) -> None:
-        self.authenticate(payload)
-
-    def issue_token(self, payload: LoginRequest) -> Token:
+    def login(self, payload: LoginRequest) -> LoginResponse:
         user = self.authenticate(payload)
-        return self._issue_tokens_for_user(user)
+        token = self._issue_tokens_for_user(user)
+        return LoginResponse(
+            access_token=token.access_token,
+            refresh_token=token.refresh_token,
+            token_type=token.token_type,
+            message="Welcome Dude!",
+        )
 
     def authenticate(self, payload: LoginRequest) -> User:
-        username = self._validate_username(payload.username)
-        self._validate_password(payload.password)
+        login = self._validate_login(payload.login)
+        self._validate_password_string(payload.password)
 
-        user = self.user_repository.get_by_username(username)
+        user = self.user_repository.get_by_login(login)
         if not user:
-            raise InvalidCredentialsError("Invalid username or password")
+            raise InvalidCredentialsError("Invalid login or password")
         if not verify_password(payload.password, user.hashed_password):
-            raise InvalidCredentialsError("Invalid username or password")
+            raise InvalidCredentialsError("Invalid login or password")
         if not user.is_active:
             raise InvalidCredentialsError("User is inactive")
 
@@ -101,19 +94,20 @@ class AuthService:
             self.db.delete(stored_token)
             self.db.commit()
 
-    def _validate_username(self, username: str) -> str:
-        if not isinstance(username, str) or not username.strip():
-            raise BadRequestError("Username is required and must be a non-empty string")
-        return username
+    def _validate_login(self, login: str) -> str:
+        if not isinstance(login, str) or not login.strip():
+            raise BadRequestError("Login is required and must be a non-empty string")
+        return login.strip()
 
-    def _validate_password(self, password: str) -> None:
+    def _validate_password_string(self, password: str) -> None:
         if not isinstance(password, str) or password == "":
             raise BadRequestError("Password is required and must be a string")
 
-        invalid_symbols = [symbol for symbol in self.FORBIDDEN_PASSWORD_SYMBOLS if symbol in password]
-        if invalid_symbols:
-            symbols = ", ".join(invalid_symbols)
-            raise BadRequestError(f"Password must not contain the following symbols: {symbols}")
+    def _validate_passwords(self, password: str, confirm_password: str) -> None:
+        self._validate_password_string(password)
+        self._validate_password_string(confirm_password)
+        if password != confirm_password:
+            raise BadRequestError("Password and confirm_password must match")
 
     def _issue_tokens_for_user(self, user: User) -> Token:
         subject = str(user.id)

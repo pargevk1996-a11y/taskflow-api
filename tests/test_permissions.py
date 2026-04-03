@@ -17,8 +17,12 @@ from app.services.workspace_service import WorkspaceService
 
 def test_member_cannot_create_project_in_workspace(db):
     auth = AuthService(db)
-    auth.register(RegisterRequest(email="owner@x.com", username="owner", password="strongpassword123"))
-    auth.register(RegisterRequest(email="member@x.com", username="member", password="strongpassword123"))
+    auth.register(
+        RegisterRequest(email="owner@x.com", login="owner", password="strongpassword123", confirm_password="strongpassword123")
+    )
+    auth.register(
+        RegisterRequest(email="member@x.com", login="member", password="strongpassword123", confirm_password="strongpassword123")
+    )
 
     owner = UserRepository(db).get_by_id(1)
     member = UserRepository(db).get_by_id(2)
@@ -42,8 +46,17 @@ def test_member_cannot_create_project_in_workspace(db):
 
 def test_non_member_cannot_list_workspace_tasks(db):
     auth = AuthService(db)
-    auth.register(RegisterRequest(email="owner2@x.com", username="owner2", password="strongpassword123"))
-    auth.register(RegisterRequest(email="stranger@x.com", username="stranger", password="strongpassword123"))
+    auth.register(
+        RegisterRequest(email="owner2@x.com", login="owner2", password="strongpassword123", confirm_password="strongpassword123")
+    )
+    auth.register(
+        RegisterRequest(
+            email="stranger@x.com",
+            login="stranger",
+            password="strongpassword123",
+            confirm_password="strongpassword123",
+        )
+    )
 
     owner = UserRepository(db).get_by_id(1)
     stranger = UserRepository(db).get_by_id(2)
@@ -70,8 +83,12 @@ def test_non_member_cannot_list_workspace_tasks(db):
 
 def test_user_cannot_edit_foreign_comment(db):
     auth = AuthService(db)
-    auth.register(RegisterRequest(email="author@x.com", username="author", password="strongpassword123"))
-    auth.register(RegisterRequest(email="other@x.com", username="other", password="strongpassword123"))
+    auth.register(
+        RegisterRequest(email="author@x.com", login="author", password="strongpassword123", confirm_password="strongpassword123")
+    )
+    auth.register(
+        RegisterRequest(email="other@x.com", login="other", password="strongpassword123", confirm_password="strongpassword123")
+    )
 
     author = UserRepository(db).get_by_id(1)
     other = UserRepository(db).get_by_id(2)

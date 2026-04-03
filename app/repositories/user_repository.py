@@ -14,19 +14,16 @@ class UserRepository:
     def get_by_email(self, email: str) -> User | None:
         return self.db.execute(select(User).where(User.email == email)).scalar_one_or_none()
 
-    def get_by_username(self, username: str) -> User | None:
-        return self.db.execute(select(User).where(User.username == username)).scalar_one_or_none()
-
     def get_by_login(self, login: str) -> User | None:
-        return self.db.execute(select(User).where(or_(User.email == login, User.username == login))).scalar_one_or_none()
+        return self.db.execute(select(User).where(User.login == login)).scalar_one_or_none()
 
-    def get_by_email_or_username(self, email: str, username: str) -> User | None:
-        return self.db.execute(select(User).where(or_(User.email == email, User.username == username))).scalar_one_or_none()
+    def get_by_email_or_login(self, email: str, login: str) -> User | None:
+        return self.db.execute(select(User).where(or_(User.email == email, User.login == login))).scalar_one_or_none()
 
-    def create(self, *, email: str, username: str, hashed_password: str) -> User:
+    def create(self, *, email: str, login: str, hashed_password: str) -> User:
         user = User(
             email=email,
-            username=username,
+            login=login,
             hashed_password=hashed_password,
             is_active=True,
             is_superuser=False,

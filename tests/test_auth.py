@@ -1,75 +1,144 @@
-from app.services.auth_service import AuthService
-from app.core.config import settings
-from app.core.exceptions import BadRequestError, TokenInvalidError, UserAlreadyExistsError
-from app.schemas.auth import LoginRequest, RegisterRequest
-from jose import jwt
-import pytest
 from datetime import UTC, datetime, timedelta
+
+import pytest
+from jose import jwt
+
+from app.core.config import settings
+from app.core.exceptions import BadRequestError, InvalidCredentialsError, TokenInvalidError, UserAlreadyExistsError
+from app.schemas.auth import LoginRequest, RegisterRequest
+from app.services.auth_service import AuthService
 
 
 def test_register_and_login(db):
     service = AuthService(db)
 
-    token = service.register(
+    register_response = service.register(
         RegisterRequest(
-            username="authuser",
+            email="authuser@example.com",
+            login="authuser",
             password="strongpassword123",
+            confirm_password="strongpassword123",
         )
     )
-    assert token.access_token
-    assert token.refresh_token
+    assert register_response.message == "Hey Dude! Log in!"
 
-    login_token = service.login(
-        LoginRequest(
-            username="authuser",
-            password="strongpassword123",
-        )
-    )
-    assert login_token is None
+    login_response = service.login(LoginRequest(login="authuser", password="strongpassword123"))
+    assert login_response.access_token
+    assert login_response.refresh_token
+    assert login_response.message == "Welcome Dude!"
 
 
-def test_login_with_username(db):
+def test_register_rejects_password_mismatch(db):
     service = AuthService(db)
 
-    service.register(
-        RegisterRequest(
-            username="username_login",
-            password="strongpassword123",
-        )
-    )
-
-    issued = service.issue_token(LoginRequest(username="username_login", password="strongpassword123"))
-    assert issued.access_token
-
-
-def test_register_rejects_forbidden_password_symbols(db):
-    service = AuthService(db)
-
-    with pytest.raises(BadRequestError, match=r"Password must not contain"):
+    with pytest.raises(BadRequestError, match="confirm_password must match"):
         service.register(
             RegisterRequest(
-                username="badpassworduser",
-                password="bad.password",
+                email="mismatch@example.com",
+                login="mismatch",
+                password="strongpassword123",
+                confirm_password="wrongpassword123",
             )
         )
 
 
-def test_register_requires_unique_username(db):
+def test_register_requires_unique_email(db):
     service = AuthService(db)
-    service.register(RegisterRequest(username="duplicate", password="strongpassword123"))
+    service.register(
+        RegisterRequest(
+            email="authuser@example.com",
+            login="authuser",
+            password="strongpassword123",
+            confirm_password="strongpassword123",
+        )
+    )
 
-    with pytest.raises(UserAlreadyExistsError, match="Username is already taken"):
-        service.register(RegisterRequest(username="duplicate", password="anotherpassword"))
+    with pytest.raises(UserAlreadyExistsError, match="Email is already taken"):
+        service.register(
+            RegisterRequest(
+                email="authuser@example.com",
+                login="another-login",
+                password="strongpassword123",
+                confirm_password="strongpassword123",
+            )
+        )
+
+
+def test_register_requires_unique_login(db):
+    service = AuthService(db)
+    service.register(
+        RegisterRequest(
+            email="unique-login@example.com",
+            login="duplicate-login",
+            password="strongpassword123",
+            confirm_password="strongpassword123",
+        )
+    )
+
+    with pytest.raises(UserAlreadyExistsError, match="Login is already taken"):
+        service.register(
+            RegisterRequest(
+                email="other@example.com",
+                login="duplicate-login",
+                password="anotherpassword123",
+                confirm_password="anotherpassword123",
+            )
+        )
+
+
+def test_login_with_invalid_login_raises(db):
+    service = AuthService(db)
+
+    with pytest.raises(InvalidCredentialsError, match="Invalid login or password"):
+        service.login(LoginRequest(login="missing", password="strongpassword123"))
+
+
+def test_login_with_invalid_password_raises(db):
+    service = AuthService(db)
+    service.register(
+        RegisterRequest(
+            email="bad-password@example.com",
+            login="bad-password-login",
+            password="strongpassword123",
+            confirm_password="strongpassword123",
+        )
+    )
+
+    with pytest.raises(InvalidCredentialsError, match="Invalid login or password"):
+        service.login(LoginRequest(login="bad-password-login", password="wrongpassword"))
+
+
+def test_login_with_inactive_user_raises(db):
+    service = AuthService(db)
+    service.register(
+        RegisterRequest(
+            email="inactive@example.com",
+            login="inactive-login",
+            password="strongpassword123",
+            confirm_password="strongpassword123",
+        )
+    )
+    user = service.user_repository.get_by_login("inactive-login")
+    assert user is not None
+    user.is_active = False
+    db.add(user)
+    db.commit()
+
+    with pytest.raises(InvalidCredentialsError, match="User is inactive"):
+        service.login(LoginRequest(login="inactive-login", password="strongpassword123"))
 
 
 def test_refresh(db):
     service = AuthService(db)
-    token = service.register(
+    service.register(
         RegisterRequest(
-            username="refreshuser",
+            email="refresh@example.com",
+            login="refreshuser",
             password="strongpassword123",
+            confirm_password="strongpassword123",
         )
     )
+    token = service.login(LoginRequest(login="refreshuser", password="strongpassword123"))
 
     refreshed = service.refresh(token.refresh_token)
     assert refreshed.access_token
@@ -111,12 +180,15 @@ def test_refresh_with_expired_token_raises_token_invalid(db):
 
 def test_refresh_with_revoked_token_raises_token_invalid(db):
     service = AuthService(db)
-    token = service.register(
+    service.register(
         RegisterRequest(
-            username="revokeduser",
+            email="revoked@example.com",
+            login="revokeduser",
             password="strongpassword123",
+            confirm_password="strongpassword123",
         )
     )
+    token = service.login(LoginRequest(login="revokeduser", password="strongpassword123"))
     service.revoke_refresh_token(token.refresh_token)
     with pytest.raises(TokenInvalidError):
         service.refresh(token.refresh_token)

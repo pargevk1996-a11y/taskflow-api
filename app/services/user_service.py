@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import NotFoundError
+from app.core.exceptions import NotFoundError, UserAlreadyExistsError
 from app.repositories.user_repository import UserRepository
 from app.schemas.user import UserRead, UserUpdate
 
@@ -20,8 +20,11 @@ class UserService:
         if not user:
             raise NotFoundError("User not found")
 
-        if payload.username is not None:
-            user.username = payload.username
+        if payload.login is not None:
+            existing_user = self.user_repository.get_by_login(payload.login)
+            if existing_user and existing_user.id != user_id:
+                raise UserAlreadyExistsError("Login is already taken")
+            user.login = payload.login
         if payload.is_active is not None:
             user.is_active = payload.is_active
 

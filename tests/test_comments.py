@@ -16,8 +16,9 @@ def test_create_comment(db):
     auth_service.register(
         RegisterRequest(
             email="comment-owner@example.com",
-            username="commentowner",
+            login="commentowner",
             password="strongpassword123",
+            confirm_password="strongpassword123",
         )
     )
 

@@ -16,13 +16,13 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def get_login_form(
-    username: str = Form(...),
+    username: str = Form(..., description="Use your login here"),
     password: str = Form(...),
 ) -> LoginRequest:
-    return LoginRequest(username=username, password=password)
+    return LoginRequest(login=username, password=password)
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
 def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)) -> User:

@@ -9,12 +9,15 @@ pytestmark = pytest.mark.skip(
 async def test_auth_flow_and_invalid_token(api_client):
     register_payload = {
         "email": "api-user@example.com",
-        "username": "apiuser",
+        "login": "apiuser",
         "password": "strongpassword123",
+        "confirm_password": "strongpassword123",
     }
     register_response = await api_client.post("/api/v1/auth/register", json=register_payload)
     assert register_response.status_code == 201
-    tokens = register_response.json()
+    login_response = await api_client.post("/api/v1/auth/login", data={"username": "apiuser", "password": "strongpassword123"})
+    assert login_response.status_code == 200
+    tokens = login_response.json()
 
     me_response = await api_client.get(
         "/api/v1/users/me",
@@ -33,14 +36,28 @@ async def test_auth_flow_and_invalid_token(api_client):
 async def test_workspace_project_permission_flow(api_client):
     owner = await api_client.post(
         "/api/v1/auth/register",
-        json={"email": "owner-api@example.com", "username": "ownerapi", "password": "strongpassword123"},
+        json={
+            "email": "owner-api@example.com",
+            "login": "ownerapi",
+            "password": "strongpassword123",
+            "confirm_password": "strongpassword123",
+        },
     )
     member = await api_client.post(
         "/api/v1/auth/register",
-        json={"email": "member-api@example.com", "username": "memberapi", "password": "strongpassword123"},
+        json={
+            "email": "member-api@example.com",
+            "login": "memberapi",
+            "password": "strongpassword123",
+            "confirm_password": "strongpassword123",
+        },
     )
-    owner_token = owner.json()["access_token"]
-    member_token = member.json()["access_token"]
+    owner_token = (
+        await api_client.post("/api/v1/auth/login", data={"username": "ownerapi", "password": "strongpassword123"})
+    ).json()["access_token"]
+    member_token = (
+        await api_client.post("/api/v1/auth/login", data={"username": "memberapi", "password": "strongpassword123"})
+    ).json()["access_token"]
 
     workspace = await api_client.post(
         "/api/v1/workspaces",
@@ -62,14 +79,18 @@ async def test_workspace_project_permission_flow(api_client):
 async def test_notification_access_control(api_client):
     u1 = await api_client.post(
         "/api/v1/auth/register",
-        json={"email": "n1@example.com", "username": "n1", "password": "strongpassword123"},
+        json={"email": "n1@example.com", "login": "n1", "password": "strongpassword123", "confirm_password": "strongpassword123"},
     )
     u2 = await api_client.post(
         "/api/v1/auth/register",
-        json={"email": "n2@example.com", "username": "n2", "password": "strongpassword123"},
+        json={"email": "n2@example.com", "login": "n2", "password": "strongpassword123", "confirm_password": "strongpassword123"},
     )
-    t1 = u1.json()["access_token"]
-    t2 = u2.json()["access_token"]
+    t1 = (await api_client.post("/api/v1/auth/login", data={"username": "n1", "password": "strongpassword123"})).json()[
+        "access_token"
+    ]
+    t2 = (await api_client.post("/api/v1/auth/login", data={"username": "n2", "password": "strongpassword123"})).json()[
+        "access_token"
+    ]
 
     create_for_self = await api_client.post(
         "/api/v1/notifications",
