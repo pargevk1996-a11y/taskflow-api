@@ -1,10 +1,9 @@
 from fastapi import APIRouter
-from fastapi import Depends, HTTPException, Request, status
-from pydantic import ValidationError
+from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
-from app.core.exceptions import InvalidCredentialsError, TokenInvalidError, UserAlreadyExistsError
+from app.api.deps import get_db, get_login_form
+from app.core.exceptions import BadRequestError, InvalidCredentialsError, TokenInvalidError, UserAlreadyExistsError
 from app.schemas.auth import LoginRequest, RegisterRequest
 from app.schemas.common import MessageSchema
 from app.schemas.token import RefreshTokenRequest, Token
@@ -18,31 +17,31 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> Token:
     service = AuthService(db)
     try:
         return service.register(payload)
+    except BadRequestError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except UserAlreadyExistsError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 
 
-@router.post("/login", response_model=Token)
-async def login(request: Request, db: Session = Depends(get_db)) -> Token:
+@router.post("/login", response_model=MessageSchema)
+def login(payload: LoginRequest = Depends(get_login_form), db: Session = Depends(get_db)) -> MessageSchema:
     service = AuthService(db)
     try:
-        content_type = request.headers.get("content-type", "")
-        if "application/x-www-form-urlencoded" in content_type or "multipart/form-data" in content_type:
-            form = await request.form()
-            username = form.get("username")
-            password = form.get("password")
-            if not isinstance(username, str) or not isinstance(password, str):
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail="username and password are required",
-                )
-            return service.login_with_identifier(username, password)
+        service.login(payload)
+        return MessageSchema(message="Welcome dude!")
+    except BadRequestError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    except InvalidCredentialsError as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
 
-        try:
-            payload = LoginRequest.model_validate(await request.json())
-        except ValidationError as exc:
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=exc.errors()) from exc
-        return service.login(payload)
+
+@router.post("/token", response_model=Token, include_in_schema=False)
+def issue_token(payload: LoginRequest = Depends(get_login_form), db: Session = Depends(get_db)) -> Token:
+    service = AuthService(db)
+    try:
+        return service.issue_token(payload)
+    except BadRequestError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except InvalidCredentialsError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
 

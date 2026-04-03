@@ -1,8 +1,9 @@
 import logging
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy.exc import IntegrityError
 
 from app.api.v1.router import api_router
@@ -17,12 +18,37 @@ from app.core.exceptions import (
 from app.core.logging import configure_logging
 
 
+SWAGGER_AUTH_CLEANUP = """
+<script>
+const hideOauthClientFields = () => {
+  const labels = Array.from(document.querySelectorAll("label"));
+  for (const label of labels) {
+    const text = (label.textContent || "").trim().toLowerCase();
+    if (text === "client_id:" || text === "client_secret:") {
+      const wrapper = label.parentElement;
+      if (wrapper) {
+        wrapper.style.display = "none";
+      }
+    }
+  }
+};
+
+window.addEventListener("load", () => {
+  hideOauthClientFields();
+  const observer = new MutationObserver(() => hideOauthClientFields());
+  observer.observe(document.body, { childList: true, subtree: true });
+});
+</script>
+"""
+
+
 def create_application() -> FastAPI:
     configure_logging()
 
     application = FastAPI(
         title=settings.app_name,
         debug=settings.debug,
+        docs_url=None,
     )
 
     application.add_middleware(
@@ -33,6 +59,15 @@ def create_application() -> FastAPI:
         allow_headers=["*"],
     )
     application.include_router(api_router, prefix=settings.api_v1_prefix)
+
+    @application.get("/docs", include_in_schema=False)
+    async def custom_swagger_ui_html() -> HTMLResponse:
+        response = get_swagger_ui_html(
+            openapi_url=application.openapi_url,
+            title=f"{application.title} - Swagger UI",
+        )
+        html = response.body.decode("utf-8").replace("</body>", f"{SWAGGER_AUTH_CLEANUP}</body>")
+        return HTMLResponse(html)
 
     @application.exception_handler(PermissionDeniedError)
     async def permission_denied_handler(_: Request, exc: PermissionDeniedError) -> JSONResponse:
