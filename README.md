@@ -1,6 +1,6 @@
 # TaskFlow API
 
-Production-like backend portfolio project on FastAPI with layered architecture:
+Production-like backend project on FastAPI with layered architecture:
 
 - `api` - HTTP endpoints and dependencies
 - `services` - business logic
