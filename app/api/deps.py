@@ -33,12 +33,17 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
     sub = payload.get("sub")
     if not sub:
         raise credentials_error
+<<<<<<< HEAD
     try:
         user_id = int(sub)
     except (TypeError, ValueError) as exc:
         raise credentials_error from exc
 
     user = UserRepository(db).get_by_id(user_id)
+=======
+
+    user = UserRepository(db).get_by_id(int(sub))
+>>>>>>> e9df211 (initial commit)
     if not user:
         raise credentials_error
     return user

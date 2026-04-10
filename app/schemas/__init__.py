@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 from app.schemas.auth import LoginRequest, LoginResponse, RegisterRequest, RegisterResponse
+=======
+from app.schemas.auth import LoginRequest, RegisterRequest
+>>>>>>> e9df211 (initial commit)
 from app.schemas.comment import CommentCreate, CommentRead, CommentUpdate
 from app.schemas.notification import NotificationCreate, NotificationRead, NotificationTypeSchema
 from app.schemas.project import ProjectCreate, ProjectRead, ProjectUpdate
@@ -12,7 +16,10 @@ __all__ = [
     "CommentRead",
     "CommentUpdate",
     "LoginRequest",
+<<<<<<< HEAD
     "LoginResponse",
+=======
+>>>>>>> e9df211 (initial commit)
     "NotificationCreate",
     "NotificationRead",
     "NotificationTypeSchema",
@@ -21,7 +28,10 @@ __all__ = [
     "ProjectUpdate",
     "RefreshTokenRequest",
     "RegisterRequest",
+<<<<<<< HEAD
     "RegisterResponse",
+=======
+>>>>>>> e9df211 (initial commit)
     "TaskCreate",
     "TaskPrioritySchema",
     "TaskRead",

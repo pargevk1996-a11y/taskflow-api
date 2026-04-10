@@ -7,7 +7,11 @@ class AuthError(AppError):
 
 
 class UserAlreadyExistsError(AuthError):
+<<<<<<< HEAD
     """Raised when user with same email or login already exists."""
+=======
+    """Raised when user with same email or username already exists."""
+>>>>>>> e9df211 (initial commit)
 
 
 class InvalidCredentialsError(AuthError):
@@ -24,6 +28,7 @@ class NotFoundError(AppError):
 
 class PermissionDeniedError(AppError):
     """Raised when user has no permission for action."""
+<<<<<<< HEAD
 
 
 class ConflictError(AppError):
@@ -32,3 +37,5 @@ class ConflictError(AppError):
 
 class BadRequestError(AppError):
     """Raised when request data is semantically invalid."""
+=======
+>>>>>>> e9df211 (initial commit)

@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 
+<<<<<<< HEAD
 from app.core.exceptions import NotFoundError, PermissionDeniedError
 from app.core.permissions import ensure_workspace_access, ensure_workspace_admin
 from app.models.user import User
@@ -7,12 +8,17 @@ from app.repositories.project_repository import ProjectRepository
 from app.repositories.comment_repository import CommentRepository
 from app.repositories.task_repository import TaskRepository
 from app.repositories.workspace_repository import WorkspaceRepository
+=======
+from app.core.exceptions import NotFoundError
+from app.repositories.comment_repository import CommentRepository
+>>>>>>> e9df211 (initial commit)
 from app.schemas.comment import CommentCreate, CommentRead, CommentUpdate
 
 
 class CommentService:
     def __init__(self, db: Session) -> None:
         self.comment_repository = CommentRepository(db)
+<<<<<<< HEAD
         self.task_repository = TaskRepository(db)
         self.project_repository = ProjectRepository(db)
         self.workspace_repository = WorkspaceRepository(db)
@@ -70,4 +76,20 @@ class CommentService:
 
         comment.body = payload.body
         comment = self.comment_repository.update(comment)
+=======
+
+    def create_comment(self, payload: CommentCreate, author_id: int | None) -> CommentRead:
+        comment = self.comment_repository.create(task_id=payload.task_id, author_id=author_id, body=payload.body)
+        return CommentRead.model_validate(comment)
+
+    def update_comment(self, comment_id: int, payload: CommentUpdate) -> CommentRead:
+        comment = self.comment_repository.get_by_id(comment_id)
+        if not comment:
+            raise NotFoundError("Comment not found")
+
+        comment.body = payload.body
+        self.comment_repository.db.add(comment)
+        self.comment_repository.db.commit()
+        self.comment_repository.db.refresh(comment)
+>>>>>>> e9df211 (initial commit)
         return CommentRead.model_validate(comment)

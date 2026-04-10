@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
@@ -38,3 +39,8 @@ def update_comment(
 ) -> CommentRead:
     service = CommentService(db)
     return service.update_comment(comment_id, payload, current_user)
+=======
+from fastapi import APIRouter
+
+router = APIRouter(prefix="/comments", tags=["Comments"])
+>>>>>>> e9df211 (initial commit)

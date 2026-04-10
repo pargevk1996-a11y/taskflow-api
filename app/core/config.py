@@ -1,7 +1,13 @@
 from functools import lru_cache
+<<<<<<< HEAD
 from typing import Any, Literal
 
 from pydantic import computed_field, field_validator
+=======
+from typing import Literal
+
+from pydantic import computed_field
+>>>>>>> e9df211 (initial commit)
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -22,7 +28,11 @@ class Settings(BaseSettings):
     postgres_password: str = "taskflow_password"
     database_url: str | None = None
 
+<<<<<<< HEAD
     jwt_secret_key: str = "change_me_dev_secret"
+=======
+    jwt_secret_key: str
+>>>>>>> e9df211 (initial commit)
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
@@ -44,6 +54,7 @@ class Settings(BaseSettings):
     smtp_password: str = "example_password"
     smtp_from: str = "noreply@example.com"
 
+<<<<<<< HEAD
     @field_validator("debug", mode="before")
     @classmethod
     def parse_debug(cls, value: Any) -> bool:
@@ -57,6 +68,8 @@ class Settings(BaseSettings):
                 return False
         return bool(value)
 
+=======
+>>>>>>> e9df211 (initial commit)
     @computed_field
     @property
     def sqlalchemy_database_uri(self) -> str:

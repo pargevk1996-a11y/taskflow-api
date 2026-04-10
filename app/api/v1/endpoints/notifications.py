@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
@@ -36,3 +37,8 @@ def mark_notification_as_read(
 ) -> NotificationRead:
     service = NotificationService(db)
     return service.mark_as_read(notification_id, current_user)
+=======
+from fastapi import APIRouter
+
+router = APIRouter(prefix="/notifications", tags=["Notifications"])
+>>>>>>> e9df211 (initial commit)

@@ -41,12 +41,20 @@ class TaskRepository:
         self.db.refresh(task)
         return task
 
+<<<<<<< HEAD
     def update(self, task: Task) -> Task:
+=======
+    def update_status(self, task: Task, status: TaskStatus) -> Task:
+        task.status = status
+>>>>>>> e9df211 (initial commit)
         self.db.add(task)
         self.db.commit()
         self.db.refresh(task)
         return task
+<<<<<<< HEAD
 
     def update_status(self, task: Task, status: TaskStatus) -> Task:
         task.status = status
         return self.update(task)
+=======
+>>>>>>> e9df211 (initial commit)

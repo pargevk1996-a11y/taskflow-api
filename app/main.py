@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import logging
 
 from fastapi import FastAPI, Request
@@ -49,6 +50,19 @@ def create_application() -> FastAPI:
         title=settings.app_name,
         debug=settings.debug,
         docs_url=None,
+=======
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.api.v1.router import api_router
+from app.core.config import settings
+
+
+def create_application() -> FastAPI:
+    application = FastAPI(
+        title=settings.app_name,
+        debug=settings.debug,
+>>>>>>> e9df211 (initial commit)
     )
 
     application.add_middleware(
@@ -59,6 +73,7 @@ def create_application() -> FastAPI:
         allow_headers=["*"],
     )
     application.include_router(api_router, prefix=settings.api_v1_prefix)
+<<<<<<< HEAD
 
     @application.get("/docs", include_in_schema=False)
     async def custom_swagger_ui_html() -> HTMLResponse:
@@ -98,6 +113,8 @@ def create_application() -> FastAPI:
         logging.getLogger(__name__).exception("Unhandled application exception", exc_info=exc)
         return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
+=======
+>>>>>>> e9df211 (initial commit)
     return application
 
 

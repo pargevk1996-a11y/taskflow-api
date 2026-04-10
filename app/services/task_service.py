@@ -1,18 +1,24 @@
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import NotFoundError
+<<<<<<< HEAD
 from app.core.permissions import ensure_workspace_access
 from app.models.task import TaskPriority, TaskStatus
 from app.models.user import User
 from app.repositories.project_repository import ProjectRepository
 from app.repositories.task_repository import TaskRepository
 from app.repositories.workspace_repository import WorkspaceRepository
+=======
+from app.models.task import TaskPriority, TaskStatus
+from app.repositories.task_repository import TaskRepository
+>>>>>>> e9df211 (initial commit)
 from app.schemas.task import TaskCreate, TaskRead, TaskStatusSchema, TaskUpdate
 
 
 class TaskService:
     def __init__(self, db: Session) -> None:
         self.task_repository = TaskRepository(db)
+<<<<<<< HEAD
         self.project_repository = ProjectRepository(db)
         self.workspace_repository = WorkspaceRepository(db)
 
@@ -25,6 +31,10 @@ class TaskService:
             user=current_user,
             workspace_repository=self.workspace_repository,
         )
+=======
+
+    def create_task(self, payload: TaskCreate, creator_id: int | None) -> TaskRead:
+>>>>>>> e9df211 (initial commit)
         task = self.task_repository.create(
             project_id=payload.project_id,
             creator_id=creator_id,
@@ -36,6 +46,7 @@ class TaskService:
         )
         return TaskRead.model_validate(task)
 
+<<<<<<< HEAD
     def get_task(self, task_id: int, current_user: User) -> TaskRead:
         task = self.task_repository.get_by_id(task_id)
         if not task:
@@ -74,6 +85,18 @@ class TaskService:
             user=current_user,
             workspace_repository=self.workspace_repository,
         )
+=======
+    def get_task(self, task_id: int) -> TaskRead:
+        task = self.task_repository.get_by_id(task_id)
+        if not task:
+            raise NotFoundError("Task not found")
+        return TaskRead.model_validate(task)
+
+    def update_task(self, task_id: int, payload: TaskUpdate) -> TaskRead:
+        task = self.task_repository.get_by_id(task_id)
+        if not task:
+            raise NotFoundError("Task not found")
+>>>>>>> e9df211 (initial commit)
 
         if payload.title is not None:
             task.title = payload.title
@@ -88,6 +111,7 @@ class TaskService:
         if payload.due_date is not None:
             task.due_date = payload.due_date
 
+<<<<<<< HEAD
         task = self.task_repository.update(task)
         return TaskRead.model_validate(task)
 
@@ -103,5 +127,16 @@ class TaskService:
             user=current_user,
             workspace_repository=self.workspace_repository,
         )
+=======
+        self.task_repository.db.add(task)
+        self.task_repository.db.commit()
+        self.task_repository.db.refresh(task)
+        return TaskRead.model_validate(task)
+
+    def update_status(self, task_id: int, status: TaskStatusSchema) -> TaskRead:
+        task = self.task_repository.get_by_id(task_id)
+        if not task:
+            raise NotFoundError("Task not found")
+>>>>>>> e9df211 (initial commit)
         updated = self.task_repository.update_status(task, TaskStatus(status.value))
         return TaskRead.model_validate(updated)

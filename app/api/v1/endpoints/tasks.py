@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
@@ -44,3 +45,8 @@ def update_task(
 ) -> TaskRead:
     service = TaskService(db)
     return service.update_task(task_id, payload, current_user)
+=======
+from fastapi import APIRouter
+
+router = APIRouter(prefix="/tasks", tags=["Tasks"])
+>>>>>>> e9df211 (initial commit)

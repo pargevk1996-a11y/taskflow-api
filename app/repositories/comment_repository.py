@@ -20,9 +20,12 @@ class CommentRepository:
         self.db.commit()
         self.db.refresh(comment)
         return comment
+<<<<<<< HEAD
 
     def update(self, comment: Comment) -> Comment:
         self.db.add(comment)
         self.db.commit()
         self.db.refresh(comment)
         return comment
+=======
+>>>>>>> e9df211 (initial commit)

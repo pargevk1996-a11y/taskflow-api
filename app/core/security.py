@@ -1,5 +1,8 @@
 from datetime import UTC, datetime, timedelta
+<<<<<<< HEAD
 from uuid import uuid4
+=======
+>>>>>>> e9df211 (initial commit)
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -24,7 +27,10 @@ def _create_token(subject: str, expires_delta: timedelta, token_type: str) -> st
         "sub": subject,
         "type": token_type,
         "exp": expire,
+<<<<<<< HEAD
         "jti": str(uuid4()),
+=======
+>>>>>>> e9df211 (initial commit)
     }
     return jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
